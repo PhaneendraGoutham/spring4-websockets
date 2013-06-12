@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Spring WebSocket Example</title>
+	<link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="styles/app.css" rel="stylesheet">
+	
+	<script src="bootstrap/js/bootstrap-affix.js"></script>
+	<script src="scripts/jquery-2.0.2.min.js"></script>
+	<script src="scripts/highstock.js"></script>
+	<script src="scripts/exporting.js"></script>
+	<script src="scripts/angular.min.js"></script>
+	<script src="scripts/app.js"></script>
+	<script src="scripts/webSocket.js"></script>
+</head>
+<body data-spy="scroll" data-target=".bs-docs-sidebar">
+
+	<div class="appheader navbar navbar-fixed-top">
+		<div class="container">
+			<h1>Spring Framework 4.0 WebSockets</h1>
+		</div>
+	</div>
+
+	<div class="container appbody" ng-app="quotesModule">
+		<div class="bs-docs-grid">
+			<div class="row show-grid" ng-controller="SymbolsCtrl">
+				<div class="span3">
+					<div class="nav nav-list bs-docs-sidebar affix">
+						<form class="form-inline" ng-submit="addSymbol()">
+							<input class="symbol" type="text" placeholder="Symbol" style="width: 100px" size="5" ng-model="symbol">
+							<input class="btn btn-primary" type="submit" value="add">
+						</form>
+						<ul class="unstyled">
+							<li ng-repeat="symbol in symbols">
+								<span class="symbol"><strong>{{symbol}}</strong></span><button ng-click="removeSymbol(symbol)" class="close">&times;</button>
+							</li>
+						</ul>
+						<div class="well well-small">Try subscribing for example to EMC, CLX, FBP, AIG, BGG, EXK, EXL, CMG, CRT, EXM, EXR, CRY, EXP, F, CS, EXPR, FAC, CSC, FAF, FAM, BFZ, FAV, BG, AHS, FBC..
+						</div>
+					</div>
+				</div>
+				<div class="span9">
+					<div class="container-fluid">
+						<div id="tickerList">
+							<div id="chart{{symbol}}" class="mychart" ng-repeat="symbol in symbols" my-chart="{{symbol}}" />
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

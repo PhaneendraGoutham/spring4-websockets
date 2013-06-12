@@ -1,0 +1,39 @@
+.appheader {
+	padding-bottom: 40px;
+	color: #5c7d4e;
+	background-color: #ffffff;
+}
+
+.appbody {
+	margin-top: 100px;	
+}
+
+.btn-primary {
+	background-color: #6d8e5f;
+	background-image: linear-gradient(to bottom, #3a5d2c, #6d8e5f);
+}
+
+.btn-primary:hover {
+	background-color: #5c7d4e;
+}
+
+span.symbol {
+	padding: 0 20px 0 0;
+	vertical-align: middle;
+}
+
+input.symbol {
+	text-transform:uppercase;
+}
+
+/* a.symbol { */
+/* 	cursor: pointer; */
+/* } */
+
+.mychart {
+	height: 150px;
+}
+
+.bs-docs-sidebar {
+	width : 200px;
+}

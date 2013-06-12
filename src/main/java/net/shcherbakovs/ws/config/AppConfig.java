@@ -69,9 +69,6 @@ public class AppConfig extends MapRepositoryBatchConfigurer {
 		return R.reactor().using(new Environment()).dispatcher(Environment.RING_BUFFER).get();
 	}
 
-//	@Autowired
-//	private QuotesMessageSource publisher;
-	
 	@Bean
 	public ItemWriter<Quote> publisherWriter() {
 		return new ItemWriter<Quote>() {
@@ -80,7 +77,6 @@ public class AppConfig extends MapRepositoryBatchConfigurer {
 				log.trace("Publishing {} quotes", items.size());
 				
 				for(Quote quote : items) {
-//					publisher.processMessage(quote);
 					reactor().notify(quote.getSymbol(), Event.wrap(quote));
 				}
 			}

@@ -3,6 +3,8 @@ package net.shcherbakovs.ws.handler;
 import static reactor.fn.Functions.$;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import net.shcherbakovs.ws.domain.Quote;
 
@@ -19,7 +21,6 @@ import reactor.fn.Consumer;
 import reactor.fn.Event;
 import reactor.fn.registry.Registration;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class QuotesWebSocketHandler extends TextWebSocketHandlerAdapter {
@@ -30,7 +31,7 @@ public class QuotesWebSocketHandler extends TextWebSocketHandlerAdapter {
 
 	@Autowired
 	private Reactor reactor;
-	private Registration<Consumer<Event<Quote>>> reg = null;
+	private Map<String, Registration<Consumer<Event<Quote>>>> regMap = new HashMap<String, Registration<Consumer<Event<Quote>>>>();
 	
 	private WebSocketSession session;
 
@@ -47,31 +48,46 @@ public class QuotesWebSocketHandler extends TextWebSocketHandlerAdapter {
     	if(!payload.equals(".")) {			// <- not a heart beat message
         	log.debug("{}: {}", session, payload);
     		if(payload.startsWith("-")) { 
-    			if( reg != null ) {
-    				reg.cancel();
-    			}
+				unsubscribe(payload);
     			log.debug("Unsubscribed {}", payload);
     		}
     		else {
-    			reg = reactor.on($(payload), new Consumer<Event<Quote>>(){
+    			regMap.put(payload, reactor.on($(payload), new Consumer<Event<Quote>>(){
     				public void accept(Event<Quote> event) {
     					onQuoteMessage(event.getData());
     				}
-    			});
+    			}));
     			log.debug("Subscribed {}", payload);
     		}
 		}
     }
 
+	private void unsubscribe(String payload) {
+		Registration<Consumer<Event<Quote>>> registration = regMap.get(payload.substring(1));
+		if( registration != null ) {
+			log.debug("Session {} Unsubscribed from {}", session, payload);
+			registration.cancel();
+		}
+	}
+
+	private void unsubscribeAll() {
+		for(Map.Entry<String, Registration<Consumer<Event<Quote>>>> entry : regMap.entrySet()) {
+			log.debug("Session {} Unsubscribed from {}", session, entry.getKey());
+    		entry.getValue().cancel();
+    	}
+	}
 
     @Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
     	log.debug("Session {} closed: {}", session, status);
-    	if( reg != null ) {
-    		reg.cancel();
-    	}
+    	unsubscribeAll();
     }
 
+	@Override
+	public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+    	log.debug("Transport error: {} Cloding Session {}", exception.getMessage(), session);
+    	unsubscribeAll();
+	}
 
 	public void onQuoteMessage(Quote msg) {
 		try {
@@ -79,11 +95,12 @@ public class QuotesWebSocketHandler extends TextWebSocketHandlerAdapter {
 			String json = objectMapper.writeValueAsString(msg);
 			session.sendMessage(new TextMessage(json));
 		} 
-		catch (JsonProcessingException ex) {
-			log.error(String.format("Failed to dispatch the message %s to the session %s:", msg, session), ex);
-		}
 		catch (IOException ex) {
 			log.error(String.format("Failed to dispatch the message %s to the session %s:", msg, session), ex);
+		}
+		catch (IllegalArgumentException iae) {
+			log.error(String.format("Failed to dispatch the message %s to the session %s:", msg, session), iae);
+			unsubscribe(msg.getSymbol());
 		}
 	}
 
